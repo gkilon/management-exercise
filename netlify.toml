@@ -1,0 +1,20 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundler = "esbuild"
+
+# SPA fallback — all non-API routes serve index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  conditions = {Role = ["!/.netlify/*", "!/api/*"]}
+
+# Simpler SPA catch-all (Netlify evaluates rules top-to-bottom;
+# the function's config.path intercepts /api/* before this runs)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
