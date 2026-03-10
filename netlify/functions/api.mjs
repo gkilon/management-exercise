@@ -122,6 +122,7 @@ export default async (req) => {
 
     // ── POST /api/admin/:code/analyze ────────────────────────────
     if (analyzeMatch && method === 'POST') {
+      console.log('[analyze] hit, code:', analyzeMatch[1]);
       const exercise = await getExerciseByAdminCode(analyzeMatch[1]);
       if (!exercise) return jsonResp({ error: 'Exercise not found' }, 404);
 
@@ -136,10 +137,10 @@ export default async (req) => {
       if (!groupResponses.length)
         return jsonResp({ error: 'No responses yet' }, 400);
 
-      // Use haiku by default on Netlify (fits in 10s free-tier timeout).
-      // Set ANALYSIS_MODEL=claude-sonnet-4-6 in Netlify env vars for richer output.
+      const model = process.env.ANALYSIS_MODEL || 'claude-haiku-4-5-20251001';
+      console.log('[analyze] calling Anthropic, model:', model, 'responses:', groupResponses.length);
       const message = await anthropic.messages.create({
-        model:      process.env.ANALYSIS_MODEL || 'claude-haiku-4-5-20251001',
+        model,
         max_tokens: 4000,
         messages:   [{ role: 'user', content: buildAnalysisPrompt(exercise, groupResponses) }]
       });
@@ -218,7 +219,7 @@ export default async (req) => {
     return jsonResp({ error: 'Not found' }, 404);
 
   } catch (err) {
-    console.error('API error:', err);
+    console.error('API error:', err.message, err.status, err.constructor?.name);
     return jsonResp({ error: err.message }, 500);
   }
 };
