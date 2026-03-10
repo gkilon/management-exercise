@@ -18,6 +18,11 @@ const jsonResp = (data, status = 200) =>
 const exercisesStore = () => getStore({ name: 'exercises', consistency: 'strong' });
 const indexStore    = () => getStore({ name: 'idx',       consistency: 'strong' });
 
+function verifyAdmin(req) {
+  const pw = req.headers.get('x-admin-password');
+  return pw && process.env.ADMIN_PASSWORD && pw === process.env.ADMIN_PASSWORD;
+}
+
 async function getExerciseByAdminCode(adminCode) {
   const exerciseId = await indexStore().get(`admin:${adminCode}`, { type: 'text' });
   if (!exerciseId) return null;
@@ -43,6 +48,7 @@ async function getGroupInfo(code) {
     exerciseId: exercise.id,
     exerciseTitle: exercise.title,
     exerciseDescription: exercise.description,
+    exerciseLogo: exercise.logo || null,
     group,
     hasResponse: !!(exercise.responses?.[group.id])
   };
@@ -68,7 +74,7 @@ export default async (req) => {
   try {
     // ── POST /api/exercises ──────────────────────────────────────
     if (path === '/api/exercises' && method === 'POST') {
-      const { title, description, groups } = await req.json();
+      const { title, description, groups, logo } = await req.json();
       if (!title || !groups?.length)
         return jsonResp({ error: 'Missing required fields' }, 400);
 
@@ -86,6 +92,7 @@ export default async (req) => {
       const exercise = {
         id: exerciseId, title, description: description || '',
         adminCode, groups: processedGroups, responses: {}, analysis: null,
+        logo: logo || null,
         createdAt: new Date().toISOString()
       };
 
@@ -129,10 +136,11 @@ export default async (req) => {
       if (!groupResponses.length)
         return jsonResp({ error: 'No responses yet' }, 400);
 
-      // Non-streaming call — faster, stays within Netlify function timeout
+      // Use haiku by default on Netlify (fits in 10s free-tier timeout).
+      // Set ANALYSIS_MODEL=claude-sonnet-4-6 in Netlify env vars for richer output.
       const message = await anthropic.messages.create({
-        model:      process.env.ANALYSIS_MODEL || 'claude-sonnet-4-6',
-        max_tokens: 6000,
+        model:      process.env.ANALYSIS_MODEL || 'claude-haiku-4-5',
+        max_tokens: 4000,
         messages:   [{ role: 'user', content: buildAnalysisPrompt(exercise, groupResponses) }]
       });
 
@@ -171,6 +179,39 @@ export default async (req) => {
       exercise.responses[groupId] = { answers, submittedAt: new Date().toISOString() };
       await saveExercise(exercise);
 
+      return jsonResp({ success: true });
+    }
+
+    // ── GET /api/global-admin/exercises ──────────────────────────
+    if (path === '/api/global-admin/exercises' && method === 'GET') {
+      if (!verifyAdmin(req)) return jsonResp({ error: 'Unauthorized' }, 401);
+      const { blobs } = await exercisesStore().list();
+      const exercises = await Promise.all(blobs.map(b => exercisesStore().get(b.key, { type: 'json' })));
+      const summary = exercises.filter(Boolean).map(ex => ({
+        id: ex.id,
+        title: ex.title,
+        adminCode: ex.adminCode,
+        createdAt: ex.createdAt,
+        groups: ex.groups.length,
+        responses: Object.keys(ex.responses || {}).length,
+        hasAnalysis: !!ex.analysis,
+        logo: ex.logo || null
+      }));
+      summary.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return jsonResp(summary);
+    }
+
+    // ── DELETE /api/global-admin/exercises/:id ────────────────────
+    const gaDeleteMatch = path.match(/^\/api\/global-admin\/exercises\/([^/]+)$/);
+    if (gaDeleteMatch && method === 'DELETE') {
+      if (!verifyAdmin(req)) return jsonResp({ error: 'Unauthorized' }, 401);
+      const exercise = await getExerciseById(gaDeleteMatch[1]);
+      if (!exercise) return jsonResp({ error: 'Not found' }, 404);
+      await exercisesStore().delete(gaDeleteMatch[1]);
+      await indexStore().delete(`admin:${exercise.adminCode}`);
+      for (const g of exercise.groups) {
+        await indexStore().delete(`group:${g.code}`);
+      }
       return jsonResp({ success: true });
     }
 

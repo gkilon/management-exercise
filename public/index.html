@@ -316,6 +316,9 @@ body::before{content:'';position:fixed;inset:0;background:
       </div>
       <p class="form-hint" style="text-align:center;margin-top:8px">קוד 6 תווים שקיבלת בעת יצירת התרגיל</p>
     </div>
+    <div style="text-align:center;margin-top:10px;margin-bottom:60px">
+      <button class="btn-ghost" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--text-m);font-family:inherit;text-decoration:underline;opacity:.5" onclick="navigate('global-admin')">כניסת מנהל ראשי</button>
+    </div>
   </div>
 </div>
 
@@ -334,9 +337,24 @@ body::before{content:'';position:fixed;inset:0;background:
             <label class="form-label">שם התרגיל *</label>
             <input type="text" class="form-input" id="exercise-title" placeholder="לדוגמה: מנהל מצטיין – עיניים של בעלי עניין" required>
           </div>
-          <div class="form-group" style="margin-bottom:0">
+          <div class="form-group">
             <label class="form-label">תיאור (אופציונלי)</label>
             <textarea class="form-textarea" id="exercise-description" style="min-height:70px" placeholder="תיאור קצר של מטרת התרגיל..."></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label class="form-label">לוגו לקוח (אופציונלי)</label>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <label class="btn btn-glass btn-sm" style="cursor:pointer">
+                📁 בחר קובץ
+                <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="handleLogoUpload(this)">
+              </label>
+              <span id="logo-file-name" style="font-size:13px;color:var(--text-s)">לא נבחר קובץ</span>
+              <button type="button" id="logo-clear-btn" class="btn btn-ghost btn-sm" style="display:none" onclick="clearLogo()">✕ הסר</button>
+            </div>
+            <div id="logo-preview" style="margin-top:12px;display:none">
+              <img id="logo-preview-img" alt="לוגו" style="max-height:70px;max-width:220px;object-fit:contain;border-radius:8px;border:1px solid var(--border);padding:8px;background:rgba(255,255,255,.05)">
+            </div>
+            <p class="form-hint">יוצג בדף הקבוצה בזמן התרגיל. מומלץ: לוגו על רקע שקוף (PNG), עד 800KB</p>
           </div>
         </div>
 
@@ -372,6 +390,7 @@ body::before{content:'';position:fixed;inset:0;background:
       <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:16px">← דף הבית</button>
       <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:8px">
         <div>
+          <img id="admin-logo" alt="לוגו" style="max-height:44px;max-width:160px;object-fit:contain;margin-bottom:10px;display:none">
           <h1 class="page-title" id="admin-title"></h1>
           <p style="color:var(--text-s);font-size:14px" id="admin-desc"></p>
         </div>
@@ -472,6 +491,7 @@ body::before{content:'';position:fixed;inset:0;background:
   <div class="container">
     <div class="page" style="max-width:740px;margin:0 auto">
       <div class="group-banner">
+        <img id="form-logo" alt="לוגו" style="max-height:56px;max-width:200px;object-fit:contain;margin-bottom:14px;display:none">
         <div class="gb-exercise" id="form-exercise-name"></div>
         <div class="gb-name">אנחנו מייצגים: <span id="form-group-name"></span></div>
         <div class="gb-perspective" id="form-group-perspective"></div>
@@ -529,6 +549,47 @@ body::before{content:'';position:fixed;inset:0;background:
   </div>
 </div>
 
+<!-- ══ GLOBAL ADMIN ═══════════════════════════════════════════ -->
+<div class="view" id="view-global-admin">
+  <div class="container">
+    <div class="page">
+      <button class="btn btn-ghost btn-sm" onclick="navigate('home')" style="margin-bottom:16px">← חזרה</button>
+
+      <!-- Login section -->
+      <div id="ga-login-section">
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="font-size:56px;margin-bottom:14px">🔑</div>
+          <h1 class="page-title" style="text-align:center">מנהל ראשי</h1>
+          <p style="color:var(--text-s);margin-top:6px">גישה מלאה לכל התרגילים במערכת</p>
+        </div>
+        <div class="card" style="max-width:400px;margin:0 auto">
+          <div class="form-group">
+            <label class="form-label">סיסמת מנהל</label>
+            <input type="password" class="form-input" id="ga-password-input" placeholder="הזן סיסמה..." onkeydown="if(event.key==='Enter')loginAsGlobalAdmin()">
+          </div>
+          <div id="ga-login-error" class="alert alert-error" style="display:none;margin-bottom:14px"></div>
+          <button class="btn btn-gold" style="width:100%;justify-content:center" onclick="loginAsGlobalAdmin()">כניסה →</button>
+        </div>
+      </div>
+
+      <!-- Dashboard section (shown after auth) -->
+      <div id="ga-dashboard-section" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+          <div>
+            <h1 class="page-title">מנהל ראשי</h1>
+            <p style="color:var(--text-s)">כל התרגילים במערכת</p>
+          </div>
+          <div style="display:flex;gap:9px">
+            <button class="btn btn-glass btn-sm" onclick="loadGlobalAdminExercises()">🔄 רענן</button>
+            <button class="btn btn-gold" onclick="navigate('create')">+ תרגיל חדש</button>
+          </div>
+        </div>
+        <div id="ga-exercises-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ PRESENTATION ════════════════════════════════════════════ -->
 <div id="presentation-overlay">
   <button class="pres-close" onclick="closePresentation()">✕ סגור מצגת</button>
@@ -541,6 +602,8 @@ body::before{content:'';position:fixed;inset:0;background:
 <script>
 // ─── State ──────────────────────────────────────────────────────
 let currentAdminCode=null,adminData=null,groupData=null,groupCount=0,autoRefreshTimer=null;
+let currentLogo=null;
+let globalAdminPassword=sessionStorage.getItem('ga-pw')||null;
 
 const DEFAULT_GROUPS=[
   {name:'כפופים ישירים',description:'עובדים שמדווחים ישירות למנהל',perspective:'אנחנו עובדיו הישירים של המנהל. הוא/היא אחראי על הכוון המקצועי שלנו, שגרת העבודה, המשוב, ההתפתחות שלנו, והסביבה שבה אנחנו עובדים.'},
@@ -561,6 +624,18 @@ function navigate(view,params={}){
     if(params.adminCode)currentAdminCode=params.adminCode;
     loadAdminDashboard();
     startAutoRefresh();
+  }
+  if(view==='global-admin'){
+    const errEl=document.getElementById('ga-login-error');
+    if(errEl)errEl.style.display='none';
+    if(globalAdminPassword){
+      document.getElementById('ga-login-section').style.display='none';
+      document.getElementById('ga-dashboard-section').style.display='block';
+      loadGlobalAdminExercises();
+    }else{
+      document.getElementById('ga-login-section').style.display='block';
+      document.getElementById('ga-dashboard-section').style.display='none';
+    }
   }
 }
 
@@ -633,11 +708,12 @@ async function handleCreateExercise(e){
   const btn=document.getElementById('create-btn');
   btn.disabled=true;btn.textContent='יוצר...';
   try{
-    const res=await apiFetch('/api/exercises','POST',{title,description,groups});
+    const res=await apiFetch('/api/exercises','POST',{title,description,groups,logo:currentLogo});
     currentAdminCode=res.adminCode;
     document.getElementById('exercise-title').value='';
     document.getElementById('exercise-description').value='';
     document.getElementById('groups-container').innerHTML='';groupCount=0;
+    clearLogo();
     navigate('admin',{adminCode:res.adminCode});
   }catch(err){alert(`שגיאה: ${err.message}`);}
   finally{btn.disabled=false;btn.innerHTML='🚀 צור תרגיל';}
@@ -657,6 +733,9 @@ function renderAdminDashboard(){
   if(!adminData)return;
   document.getElementById('admin-title').textContent=adminData.title;
   document.getElementById('admin-desc').textContent=adminData.description||'';
+  const adminLogoEl=document.getElementById('admin-logo');
+  if(adminData.logo){adminLogoEl.src=adminData.logo;adminLogoEl.style.display='block';}
+  else{adminLogoEl.style.display='none';}
   document.getElementById('admin-code-show').textContent=adminData.adminCode;
   document.getElementById('last-refresh').textContent=`עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
 
@@ -738,9 +817,25 @@ async function triggerAnalysis(){
   document.getElementById('analyze-loading').style.display='block';
   const preview=document.getElementById('stream-preview');
   preview.innerHTML='<span class="cursor"></span>';
-  let accumulated='';
+  let accumulated='', gotDone=false;
+
+  // Abort controller – give up after 55 seconds
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 55000);
+
   try{
-    const resp=await fetch(`/api/admin/${currentAdminCode}/analyze`,{method:'POST',headers:{'Content-Type':'application/json'}});
+    const resp=await fetch(`/api/admin/${currentAdminCode}/analyze`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      signal: controller.signal
+    });
+
+    // Surface HTTP errors immediately (e.g. 502 timeout from Netlify)
+    if(!resp.ok){
+      const errData = await resp.json().catch(()=>({error:`שגיאת שרת ${resp.status}`}));
+      throw new Error(errData.error || `שגיאת שרת ${resp.status}`);
+    }
+
     const reader=resp.body.getReader();
     const decoder=new TextDecoder();
     let buffer='';
@@ -754,15 +849,21 @@ async function triggerAnalysis(){
         try{
           const obj=JSON.parse(line.slice(5).trim());
           if(obj.chunk){accumulated+=obj.chunk;preview.innerHTML=mdToHtml(accumulated)+'<span class="cursor"></span>';preview.scrollTop=preview.scrollHeight;}
-          if(obj.done){await refreshAdmin();document.getElementById('analysis-placeholder').style.display='none';document.getElementById('analysis-result').style.display='block';if(adminData.analysis)renderAnalysis(adminData.analysis);}
+          if(obj.done){gotDone=true;await refreshAdmin();document.getElementById('analysis-placeholder').style.display='none';document.getElementById('analysis-result').style.display='block';if(adminData.analysis)renderAnalysis(adminData.analysis);}
           if(obj.error)throw new Error(obj.error);
-        }catch{}
+        }catch(parseErr){}
       }
     }
+    if(!gotDone) throw new Error('הניתוח לא הסתיים – נסה שוב');
   }catch(err){
-    alert(`שגיאה: ${err.message}`);
+    const msg = err.name==='AbortError'
+      ? 'הניתוח לקח יותר מדי זמן. נסה שוב או בדוק שה-API key מוגדר נכון בנטליפיי.'
+      : `שגיאה: ${err.message}`;
+    document.getElementById('stream-preview').innerHTML=`<div class="alert alert-error" style="margin:0">${msg}</div>`;
     document.getElementById('analyze-btn-wrap').style.display='block';
     document.getElementById('analyze-loading').style.display='none';
+  }finally{
+    clearTimeout(timer);
   }
 }
 
@@ -790,6 +891,9 @@ async function handleGroupLogin(){
     document.getElementById('form-exercise-name').textContent=data.exerciseTitle;
     document.getElementById('form-group-name').textContent=data.group.name;
     document.getElementById('form-group-perspective').textContent=data.group.perspective;
+    const logoEl=document.getElementById('form-logo');
+    if(data.exerciseLogo){logoEl.src=data.exerciseLogo;logoEl.style.display='block';}
+    else{logoEl.style.display='none';}
     ['a1','a2','a3','a4'].forEach(id=>document.getElementById(id).value='');
     navigate('group-form');
   }catch(err){errEl.textContent='קוד לא נמצא. בדוק שוב.';errEl.style.display='flex';}
@@ -810,6 +914,98 @@ async function handleGroupSubmit(e){
     }});
     navigate('success');
   }catch(err){errEl.textContent=`שגיאה: ${err.message}`;errEl.style.display='flex';btn.disabled=false;btn.innerHTML='✅ שלח תשובות';}
+}
+
+// ─── GLOBAL ADMIN ────────────────────────────────────────────────
+async function loginAsGlobalAdmin(){
+  const pw=document.getElementById('ga-password-input').value;
+  const errEl=document.getElementById('ga-login-error');
+  errEl.style.display='none';
+  if(!pw)return;
+  try{
+    await apiFetchAdmin('/api/global-admin/exercises','GET',null,pw);
+    globalAdminPassword=pw;
+    sessionStorage.setItem('ga-pw',pw);
+    document.getElementById('ga-login-section').style.display='none';
+    document.getElementById('ga-dashboard-section').style.display='block';
+    loadGlobalAdminExercises();
+  }catch(err){
+    errEl.textContent=err.message.includes('401')||err.message.includes('Unauthorized')?'סיסמה שגויה':`שגיאה: ${err.message}`;
+    errEl.style.display='flex';
+  }
+}
+
+async function apiFetchAdmin(url,method='GET',body=null,pw=null){
+  const password=pw||globalAdminPassword;
+  const opts={method,headers:{'Content-Type':'application/json','x-admin-password':password||''}};
+  if(body)opts.body=JSON.stringify(body);
+  const res=await fetch(url,opts);
+  const data=await res.json();
+  if(!res.ok)throw new Error(data.error||`HTTP ${res.status}`);
+  return data;
+}
+
+async function loadGlobalAdminExercises(){
+  const listEl=document.getElementById('ga-exercises-list');
+  listEl.innerHTML='<div style="text-align:center;padding:40px"><div class="spinner" style="margin:0 auto"></div></div>';
+  try{
+    const exercises=await apiFetchAdmin('/api/global-admin/exercises');
+    if(!exercises.length){listEl.innerHTML='<div class="alert alert-warn">אין תרגילים עדיין.</div>';return;}
+    listEl.innerHTML=exercises.map(ex=>`
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+          <div style="flex:1">
+            ${ex.logo?`<img src="${ex.logo}" alt="לוגו" style="max-height:48px;max-width:160px;object-fit:contain;margin-bottom:10px;display:block">`:''}
+            <div style="font-weight:800;font-size:17px;margin-bottom:4px">${esc(ex.title)}</div>
+            <div style="font-size:12px;color:var(--text-m);margin-bottom:10px">${new Date(ex.createdAt).toLocaleDateString('he-IL')}</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <span class="badge badge-blue">👥 ${ex.groups} קבוצות</span>
+              <span class="badge badge-${ex.responses===ex.groups?'green':'amber'}">${ex.responses}/${ex.groups} ענו</span>
+              ${ex.hasAnalysis?'<span class="badge badge-green">✓ נותח</span>':''}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end">
+            <div class="code-box" style="font-size:14px;padding:5px 12px">${ex.adminCode}</div>
+            <button class="btn btn-glass btn-sm" onclick="navigate('admin',{adminCode:'${ex.adminCode}'})">פתח →</button>
+            <button class="btn btn-red btn-sm" onclick="gaDeleteExercise('${ex.id}',\`${esc(ex.title)}\`)">🗑 מחק</button>
+          </div>
+        </div>
+      </div>`).join('');
+  }catch(err){
+    listEl.innerHTML=`<div class="alert alert-error">שגיאה: ${err.message}</div>`;
+  }
+}
+
+async function gaDeleteExercise(id,title){
+  if(!confirm(`למחוק את "${title}"?\nפעולה זו אינה ניתנת לביטול.`))return;
+  try{
+    await apiFetchAdmin(`/api/global-admin/exercises/${id}`,'DELETE');
+    loadGlobalAdminExercises();
+  }catch(err){alert(`שגיאה: ${err.message}`);}
+}
+
+// ─── LOGO ─────────────────────────────────────────────────────────
+function handleLogoUpload(input){
+  const file=input.files[0];
+  if(!file)return;
+  if(file.size>800*1024){alert('הקובץ גדול מדי. מקסימום 800KB.');input.value='';return;}
+  document.getElementById('logo-file-name').textContent=file.name;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    currentLogo=e.target.result;
+    document.getElementById('logo-preview-img').src=currentLogo;
+    document.getElementById('logo-preview').style.display='block';
+    document.getElementById('logo-clear-btn').style.display='inline-flex';
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearLogo(){
+  currentLogo=null;
+  document.getElementById('logo-file').value='';
+  document.getElementById('logo-file-name').textContent='לא נבחר קובץ';
+  document.getElementById('logo-preview').style.display='none';
+  document.getElementById('logo-clear-btn').style.display='none';
 }
 
 // ─── Utilities ───────────────────────────────────────────────────
