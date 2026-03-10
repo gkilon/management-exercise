@@ -434,12 +434,13 @@ body::before{content:'';position:fixed;inset:0;background:
             <div style="font-size:52px;margin-bottom:16px">🤖</div>
             <div style="font-size:20px;font-weight:800;margin-bottom:10px">ניתוח AI – אינטגרציה של כל הנקודות</div>
             <p style="color:var(--text-s);margin-bottom:28px;max-width:500px;margin-inline:auto;line-height:1.8">לאחר שהקבוצות הגישו תשובות, הפעל את Claude שיסנתז את כל הנקודות ויגלה תובנות מעמיקות על תפקיד המנהל</p>
+            <div id="analyze-error" class="alert alert-error" style="display:none;margin:16px 0 0;text-align:right"></div>
             <div id="analyze-btn-wrap">
               <button class="btn btn-gold btn-lg" onclick="triggerAnalysis()" id="analyze-btn">✨ הפק ניתוח AI</button>
             </div>
             <div id="analyze-loading" style="display:none">
               <div class="spinner" style="width:44px;height:44px;border-width:3px;margin:0 auto"></div>
-              <p style="margin-top:16px;color:var(--text-s)">Claude מנתח את כל התשובות... עשוי לקחת כ-30 שניות</p>
+              <p style="margin-top:16px;color:var(--text-s)">Claude מנתח את כל התשובות... כ-5 עד 10 שניות</p>
               <div class="stream-preview analysis-body" id="stream-preview"></div>
             </div>
           </div>
@@ -813,6 +814,7 @@ async function triggerAnalysis(){
   document.querySelectorAll('.tab')[2].classList.add('active');
   document.getElementById('analysis-result').style.display='none';
   document.getElementById('analysis-placeholder').style.display='block';
+  document.getElementById('analyze-error').style.display='none';
   document.getElementById('analyze-btn-wrap').style.display='none';
   document.getElementById('analyze-loading').style.display='block';
   const preview=document.getElementById('stream-preview');
@@ -859,7 +861,8 @@ async function triggerAnalysis(){
     const msg = err.name==='AbortError'
       ? 'הניתוח לקח יותר מדי זמן. נסה שוב או בדוק שה-API key מוגדר נכון בנטליפיי.'
       : `שגיאה: ${err.message}`;
-    document.getElementById('stream-preview').innerHTML=`<div class="alert alert-error" style="margin:0">${msg}</div>`;
+    const errEl=document.getElementById('analyze-error');
+    errEl.textContent=msg;errEl.style.display='flex';
     document.getElementById('analyze-btn-wrap').style.display='block';
     document.getElementById('analyze-loading').style.display='none';
   }finally{

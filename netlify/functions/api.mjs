@@ -139,7 +139,7 @@ export default async (req) => {
       // Use haiku by default on Netlify (fits in 10s free-tier timeout).
       // Set ANALYSIS_MODEL=claude-sonnet-4-6 in Netlify env vars for richer output.
       const message = await anthropic.messages.create({
-        model:      process.env.ANALYSIS_MODEL || 'claude-haiku-4-5',
+        model:      process.env.ANALYSIS_MODEL || 'claude-haiku-4-5-20251001',
         max_tokens: 4000,
         messages:   [{ role: 'user', content: buildAnalysisPrompt(exercise, groupResponses) }]
       });
