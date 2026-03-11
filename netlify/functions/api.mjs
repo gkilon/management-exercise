@@ -141,7 +141,7 @@ export default async (req) => {
       console.log('[analyze] calling Anthropic, model:', model, 'responses:', groupResponses.length);
       const message = await anthropic.messages.create({
         model,
-        max_tokens: 4000,
+        max_tokens: 1500,
         messages:   [{ role: 'user', content: buildAnalysisPrompt(exercise, groupResponses) }]
       });
 
