@@ -928,7 +928,45 @@ async function triggerAnalysis(){
 }
 
 function renderAnalysis(analysis){
-  const html=mdToHtml(analysis.content);
+  let html='';
+  const jsonMatch=analysis.content.match(/```json\s*([\s\S]*?)\s*```/);
+  
+  if(jsonMatch){
+    try{
+      const data=JSON.parse(jsonMatch[1]);
+      if(data.tensions&&Array.isArray(data.tensions)){
+        html=`<div style="display:grid;gap:24px">`;
+        data.tensions.forEach((tension,idx)=>{
+          html+=`
+            <div style="background:var(--card-s);border:1px solid var(--border-g);border-radius:var(--r);padding:24px;position:relative;overflow:hidden">
+              <div style="position:absolute;top:0;right:0;width:4px;height:100%;background:linear-gradient(180deg,var(--gold),var(--gold-d));opacity:0.6"></div>
+              <div style="display:flex;align-items:start;gap:16px;">
+                <div style="font-size:32px;font-weight:900;color:var(--gold);opacity:0.3;flex-shrink:0">${idx+1}</div>
+                <div style="flex:1">
+                  <h2 style="font-size:18px;font-weight:800;color:var(--text);margin:0 0 8px 0;padding-bottom:8px;border-bottom:2px solid var(--gold)">⚡ ${tension.title}</h2>
+                  <p style="font-size:14px;color:var(--text-s);margin:12px 0 16px;line-height:1.6">${tension.description}</p>
+                  <div>
+                    <h3 style="font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;margin:16px 0 12px;letter-spacing:0.5px">שאלות עבודה</h3>
+                    <ul style="list-style:none;padding:0;margin:0">
+                      ${tension.questions.map(q=>`<li style="padding:10px 12px;margin-bottom:8px;background:rgba(245,158,11,0.08);border-right:3px solid var(--gold);border-radius:4px;color:var(--text-s);font-size:14px;line-height:1.5">${q}</li>`).join('')}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+        html+=`</div>`;
+      }else{
+        throw new Error('Invalid structure');
+      }
+    }catch(e){
+      html=mdToHtml(analysis.content);
+    }
+  }else{
+    html=mdToHtml(analysis.content);
+  }
+  
   document.getElementById('analysis-content').innerHTML=html;
   document.getElementById('pres-content').innerHTML=html;
   document.getElementById('analysis-time').textContent=`הופק: ${new Date(analysis.generatedAt).toLocaleString('he-IL')}`;
