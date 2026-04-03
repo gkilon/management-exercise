@@ -798,42 +798,51 @@ async function loadAdminDashboard(){
 }
 
 function renderAdminDashboard(){
-  if(!adminData)return;
-  document.getElementById('admin-title').textContent=adminData.title;
-  document.getElementById('admin-desc').textContent=adminData.description||'';
-  const adminLogoEl=document.getElementById('admin-logo');
-  if(adminData.logo){adminLogoEl.src=adminData.logo;adminLogoEl.style.display='block';}
-  else{adminLogoEl.style.display='none';}
-  document.getElementById('admin-code-show').textContent=adminData.adminCode;
-  document.getElementById('last-refresh').textContent=`עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
+  if(!adminData){
+    console.error('renderAdminDashboard: adminData is null or undefined');
+    return;
+  }
+  
+  try {
+    document.getElementById('admin-title').textContent=adminData.title||'(ללא שם)';
+    document.getElementById('admin-desc').textContent=adminData.description||'';
+    const adminLogoEl=document.getElementById('admin-logo');
+    if(adminData.logo){adminLogoEl.src=adminData.logo;adminLogoEl.style.display='block';}
+    else{adminLogoEl.style.display='none';}
+    document.getElementById('admin-code-show').textContent=adminData.adminCode||'(לא מוגדר)';
+    document.getElementById('last-refresh').textContent=`עדכון: ${new Date().toLocaleTimeString('he-IL')}`;
 
-  const total=adminData.groups.length;
-  const responded=Object.keys(adminData.responses||{}).length;
-  const pct=total>0?Math.round((responded/total)*100):0;
-  const pctColor=pct===100?'var(--green)':pct>0?'var(--gold)':'var(--text-m)';
+    const total=adminData.groups?.length||0;
+    const responded=Object.keys(adminData.responses||{}).length;
+    const pct=total>0?Math.round((responded/total)*100):0;
+    const pctColor=pct===100?'var(--green)':pct>0?'var(--gold)':'var(--text-m)';
 
-  document.getElementById('admin-stats').innerHTML=`
-    <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${total}</div><div class="stat-label">קבוצות</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--green)">${responded}</div><div class="stat-label">הגישו תשובות</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:${pctColor}">${pct}%</div><div class="stat-label">השלמה</div></div>`;
+    document.getElementById('admin-stats').innerHTML=`
+      <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${total}</div><div class="stat-label">קבוצות</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--green)">${responded}</div><div class="stat-label">הגישו תשובות</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:${pctColor}">${pct}%</div><div class="stat-label">השלמה</div></div>`;
 
-  document.getElementById('groups-list').innerHTML=adminData.groups.map(g=>{
-    const done=adminData.responses?.[g.id];
-    return`<div class="group-card">
-      <div class="gc-info">
-        <div class="gc-name">${esc(g.name)}</div>
-        ${g.description?`<div class="gc-desc">${esc(g.description)}</div>`:''}
-        ${done?'<span class="badge badge-green">✓ הגישו תשובות</span>':'<span class="badge badge-amber">⏳ ממתין</span>'}
-      </div>
-      <div class="gc-code-col">
-        <div class="gc-code-label">קוד קבוצה</div>
-        <div class="gc-code">${g.code}</div>
-        <button class="copy-btn" id="cb-${g.code}" onclick="copyCode('${g.code}')">📋 העתק</button>
-      </div>
-    </div>`;
-  }).join('');
+    document.getElementById('groups-list').innerHTML=adminData.groups?.map(g=>{
+      const done=adminData.responses?.[g.id];
+      return`<div class="group-card">
+        <div class="gc-info">
+          <div class="gc-name">${esc(g.name)}</div>
+          ${g.description?`<div class="gc-desc">${esc(g.description)}</div>`:''}
+          ${done?'<span class="badge badge-green">✓ הגישו תשובות</span>':'<span class="badge badge-amber">⏳ ממתין</span>'}
+        </div>
+        <div class="gc-code-col">
+          <div class="gc-code-label">קוד קבוצה</div>
+          <div class="gc-code">${g.code}</div>
+          <button class="copy-btn" id="cb-${g.code}" onclick="copyCode('${g.code}')">📋 העתק</button>
+        </div>
+      </div>`;
+    }).join('');
 
-  if(adminData.analysis)renderAnalysis(adminData.analysis);
+    if(adminData.analysis)renderAnalysis(adminData.analysis);
+  } catch(err) {
+    console.error('renderAdminDashboard error:', err);
+    alert('שגיאה בטעינת פרטי התרגיל');
+  }
 }
 
 function showTab(id,btn){
