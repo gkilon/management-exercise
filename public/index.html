@@ -700,7 +700,10 @@ function navigate(view,params={}){
 // ─── HOME ─────────────────────────────────────────────────────
 function loginAsAdmin(){
   const code=document.getElementById('admin-code-input').value.trim().toUpperCase();
-  if(code.length<4)return;
+  if(!code || code.length<4){
+    alert('אנא הזן קוד מנהל בן 4 תווים לפחות');
+    return;
+  }
   navigate('admin',{adminCode:code});
 }
 
@@ -780,10 +783,17 @@ async function handleCreateExercise(e){
 // ─── ADMIN ────────────────────────────────────────────────────────
 async function loadAdminDashboard(){
   try{
+    if(!currentAdminCode){
+      alert('שגיאה: קוד מנהל לא הוגדר.');
+      navigate('home');
+      return;
+    }
     adminData=await apiFetch(`/api/admin/${currentAdminCode}`);
     renderAdminDashboard();
   }catch(err){
-    alert('קוד מנהל לא נמצא.');navigate('home');
+    console.error('Admin login error:', err);
+    alert('שגיאה: קוד מנהל לא נמצא או שרת לא זמין.');
+    navigate('home');
   }
 }
 

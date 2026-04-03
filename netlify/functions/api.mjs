@@ -114,9 +114,16 @@ export default async (req) => {
     const adminMatch   = path.match(/^\/api\/admin\/([A-Z0-9]+)$/);
     const analyzeMatch = path.match(/^\/api\/admin\/([A-Z0-9]+)\/analyze$/);
 
+    // ── GET /api/admin/:code ─────────────────────────────────────
     if (adminMatch && method === 'GET') {
-      const exercise = await getExerciseByAdminCode(adminMatch[1]);
-      if (!exercise) return jsonResp({ error: 'Exercise not found' }, 404);
+      const adminCode = adminMatch[1];
+      console.log('[admin-get] Fetching admin code:', adminCode);
+      const exercise = await getExerciseByAdminCode(adminCode);
+      if (!exercise) {
+        console.log('[admin-get] Exercise not found for code:', adminCode);
+        return jsonResp({ error: 'Exercise not found' }, 404);
+      }
+      console.log('[admin-get] Found exercise:', exercise.id);
       return jsonResp(exercise);
     }
 
