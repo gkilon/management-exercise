@@ -947,61 +947,61 @@ async function triggerAnalysis(){
 }
 
 function renderAnalysis(analysis){
-  let html='';
-  const jsonMatch=analysis.content.match(/```json\s*([\s\S]*?)\s*```/);
-  
-  if(jsonMatch){
-    try{
-      const data=JSON.parse(jsonMatch[1]);
-      if(data.tensions&&Array.isArray(data.tensions)){
-        html=`<div style="display:grid;gap:32px">`;
-        data.tensions.forEach((tension,tidx)=>{
-          html+=`
+  let html = '';
+  const jsonMatch = analysis.content.match(/```json\s*([\s\S]*?)\s*```/);
+
+  if (jsonMatch) {
+    try {
+      const data = JSON.parse(jsonMatch[1]);
+      if (data.tensions && Array.isArray(data.tensions)) {
+        html = '<div style="display:grid;gap:32px">';
+        data.tensions.forEach((tension) => {
+          const questionsHtml = (tension.questions || []).map((q) => {
+            const target = q.target || 'all';
+            const isForAll = target === 'all';
+            const groupNum = target.replace('group', '');
+            const groupLabel = isForAll ? 'כל הקבוצות' : `קבוצה ${groupNum}`;
+            const bgColor = isForAll ? 'rgba(59,130,246,0.08)' : 'rgba(16,185,129,0.08)';
+            const borderColor = isForAll ? 'var(--blue)' : 'var(--green)';
+            const icon = isForAll ? '🎯' : '👥';
+            return `
+              <div style="border:1px solid ${borderColor};border-radius:var(--r-sm);padding:12px 14px;background:${bgColor};display:grid;gap:8px">
+                <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">
+                  <span style="color:${borderColor}">${icon}</span>
+                  <span style="color:var(--text-m)">${groupLabel}</span>
+                </div>
+                <p style="font-size:14px;color:var(--text);margin:0;line-height:1.5;font-weight:500">${q.text}</p>
+              </div>
+            `;
+          }).join('');
+
+          html += `
             <div style="border-left:4px solid var(--gold);border-radius:var(--r);padding:24px;background:linear-gradient(135deg,rgba(245,158,11,0.05),rgba(245,158,11,0.02))">
               <div style="margin-bottom:16px">
                 <h2 style="font-size:20px;font-weight:900;color:var(--text);margin:0;padding:0;line-height:1.3">⚡ ${tension.title}</h2>
                 <p style="font-size:13px;color:var(--text-m);margin:8px 0 0 0;opacity:0.8">${tension.description}</p>
               </div>
-              
-              <div style="display:grid;gap:12px;margin-top:16px">
-                ${(tension.questions||[]).map((q,qidx)=>{
-                  const target=q.target||'all';
-                  const isForAll=target==='all';
-                  const groupNum=target.replace('group','');
-                  const groupLabel=isForAll?'כל הקבוצות':\`קבוצה \${groupNum}\`;
-                  const bgColor=isForAll?'rgba(59,130,246,0.08)':'rgba(16,185,129,0.08)';
-                  const borderColor=isForAll?'var(--blue)':'var(--green)';
-                  return \`
-                    <div style="border:1px solid \${borderColor};border-radius:var(--r-sm);padding:12px 14px;background:\${bgColor};display:grid;gap:8px">
-                      <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">
-                        <span style="color:\${borderColor}">\${isForAll?'🎯':'👥'}</span>
-                        <span style="color:var(--text-m)">\${groupLabel}</span>
-                      </div>
-                      <p style="font-size:14px;color:var(--text);margin:0;line-height:1.5;font-weight:500">\${q.text}</p>
-                    </div>
-                  \`;
-                }).join('')}
-              </div>
+              <div style="display:grid;gap:12px;margin-top:16px">${questionsHtml}</div>
             </div>
-          \`;
+          `;
         });
-        html+=\`</div>\`;
-      }else{
+        html += '</div>';
+      } else {
         throw new Error('Invalid structure');
       }
-    }catch(e){
+    } catch (e) {
       console.error('JSON parse error:', e);
-      html=mdToHtml(analysis.content);
+      html = mdToHtml(analysis.content);
     }
-  }else{
-    html=mdToHtml(analysis.content);
+  } else {
+    html = mdToHtml(analysis.content);
   }
-  
-  document.getElementById('analysis-content').innerHTML=html;
-  document.getElementById('pres-content').innerHTML=html;
-  document.getElementById('analysis-time').textContent=\`הופק: \${new Date(analysis.generatedAt).toLocaleString('he-IL')}\`;
-  document.getElementById('analysis-placeholder').style.display='none';
-  document.getElementById('analysis-result').style.display='block';
+
+  document.getElementById('analysis-content').innerHTML = html;
+  document.getElementById('pres-content').innerHTML = html;
+  document.getElementById('analysis-time').textContent = `הופק: ${new Date(analysis.generatedAt).toLocaleString('he-IL')}`;
+  document.getElementById('analysis-placeholder').style.display = 'none';
+  document.getElementById('analysis-result').style.display = 'block';
 }
 
 function openPresentation(){document.getElementById('presentation-overlay').style.display='block';document.body.style.overflow='hidden';}
