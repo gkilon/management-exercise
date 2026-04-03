@@ -946,29 +946,32 @@ function renderAnalysis(analysis){
               
               <div style="display:grid;gap:12px;margin-top:16px">
                 ${(tension.questions||[]).map((q,qidx)=>{
-                  const groupLabel=q.targetGroup||'כל הקבוצות';
-                  const isForAll=groupLabel==='כל קבוצות'||groupLabel==='כל הקבוצות';
+                  const target=q.target||'all';
+                  const isForAll=target==='all';
+                  const groupNum=target.replace('group','');
+                  const groupLabel=isForAll?'כל הקבוצות':\`קבוצה \${groupNum}\`;
                   const bgColor=isForAll?'rgba(59,130,246,0.08)':'rgba(16,185,129,0.08)';
                   const borderColor=isForAll?'var(--blue)':'var(--green)';
-                  return `
-                    <div style="border:1px solid ${borderColor};border-radius:var(--r-sm);padding:12px 14px;background:${bgColor};display:grid;gap:8px">
+                  return \`
+                    <div style="border:1px solid \${borderColor};border-radius:var(--r-sm);padding:12px 14px;background:\${bgColor};display:grid;gap:8px">
                       <div style="display:flex;align-items:center;gap:8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px">
-                        <span style="color:${borderColor}">${isForAll?'🎯':'👥'}</span>
-                        <span style="color:var(--text-m)">${groupLabel}</span>
+                        <span style="color:\${borderColor}">\${isForAll?'🎯':'👥'}</span>
+                        <span style="color:var(--text-m)">\${groupLabel}</span>
                       </div>
-                      <p style="font-size:14px;color:var(--text);margin:0;line-height:1.5;font-weight:500">${q.text}</p>
+                      <p style="font-size:14px;color:var(--text);margin:0;line-height:1.5;font-weight:500">\${q.text}</p>
                     </div>
-                  `;
+                  \`;
                 }).join('')}
               </div>
             </div>
-          `;
+          \`;
         });
-        html+=`</div>`;
+        html+=\`</div>\`;
       }else{
         throw new Error('Invalid structure');
       }
     }catch(e){
+      console.error('JSON parse error:', e);
       html=mdToHtml(analysis.content);
     }
   }else{
@@ -977,7 +980,7 @@ function renderAnalysis(analysis){
   
   document.getElementById('analysis-content').innerHTML=html;
   document.getElementById('pres-content').innerHTML=html;
-  document.getElementById('analysis-time').textContent=`הופק: ${new Date(analysis.generatedAt).toLocaleString('he-IL')}`;
+  document.getElementById('analysis-time').textContent=\`הופק: \${new Date(analysis.generatedAt).toLocaleString('he-IL')}\`;
   document.getElementById('analysis-placeholder').style.display='none';
   document.getElementById('analysis-result').style.display='block';
 }
